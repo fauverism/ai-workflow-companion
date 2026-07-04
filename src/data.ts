@@ -40,12 +40,15 @@ export interface ToolkitItem {
   tags: string[];
   filename: string;
   content: string;
+  /** Why this exists / anything to know before installing. Shown above the code, never copied. */
+  note?: string;
 }
 
 export interface ToolkitCategory {
   category: string;
   icon: string;
   desc: string;
+  docs: DocLink;
   items: ToolkitItem[];
 }
 
@@ -581,6 +584,7 @@ export const TOOLKIT: ToolkitCategory[] = [
     category: "Slash Commands",
     icon: "⌘",
     desc: "Drop these in .claude/commands/ and check into git. The team gets them automatically.",
+    docs: { label: "Docs: Slash commands", url: "https://docs.claude.com/en/docs/claude-code/slash-commands" },
     items: [
       {
         id: "cmd-go",
@@ -771,6 +775,7 @@ After generating, update CLAUDE.md if any naming decisions were made.`,
     category: "Agents",
     icon: "◈",
     desc: "Drop these in .claude/agents/. Each runs with its own context, model, and tool permissions.",
+    docs: { label: "Docs: Subagents", url: "https://docs.claude.com/en/docs/claude-code/sub-agents" },
     items: [
       {
         id: "agent-verify",
@@ -873,7 +878,6 @@ You are a repeat-issue investigator. You analyze batches of tickets that resulte
 name: a11y-auditor
 description: WCAG 2.1 AA audit with visual verification in the browser
 color: green
-tools: Read, Bash, Browser
 ---
 
 You are an accessibility auditor. You review UI components and pages against WCAG 2.1 AA criteria.
@@ -904,6 +908,7 @@ You are an accessibility auditor. You review UI components and pages against WCA
     category: "Skills",
     icon: "▣",
     desc: "Reusable workflows in .claude/skills/ or ~/.claude/skills/. These are the compound-interest layer.",
+    docs: { label: "Docs: Agent Skills", url: "https://docs.claude.com/en/docs/claude-code/skills" },
     items: [
       {
         id: "skill-reliability-brief",
@@ -913,12 +918,7 @@ You are an accessibility auditor. You review UI components and pages against WCA
         filename: ".claude/skills/reliability-brief/SKILL.md",
         content: `---
 name: reliability-brief
-description: Generate a morning reliability brief from available data sources
-triggers:
-  - "morning brief"
-  - "what happened overnight"
-  - "reliability status"
-  - "/brief"
+description: Generate a morning reliability brief from available data sources. Use when the user asks for a morning brief, reliability status, or what happened overnight.
 ---
 
 # Reliability Brief Skill
@@ -963,12 +963,7 @@ Generate a concise morning brief for an engineer responsible for reliability.
         filename: ".claude/skills/repeat-cluster/SKILL.md",
         content: `---
 name: repeat-cluster
-description: Use a fan-out workflow to classify repeat tickets at scale
-triggers:
-  - "analyze repeats"
-  - "repeat drivers"
-  - "cluster tickets"
-  - "what's causing repeats"
+description: Use a fan-out workflow to classify repeat tickets at scale. Use when the user asks to analyze repeats, find repeat drivers, or cluster tickets by root cause.
 ---
 
 # Repeat-Issue Clustering Skill
@@ -1011,11 +1006,7 @@ A ranked list of repeat drivers with:
         filename: ".claude/skills/golden-path-check/SKILL.md",
         content: `---
 name: golden-path-check
-description: Verify that new code follows the org's golden path / paved road patterns
-triggers:
-  - "golden path check"
-  - "does this follow our standards"
-  - "paved road review"
+description: Verify that new code follows the org's golden path / paved road patterns. Use when the user asks for a golden path check, a paved road review, or whether code follows our standards.
 ---
 
 # Golden Path Compliance Check
@@ -1050,7 +1041,8 @@ Review changed files against the organization's standard patterns (the "golden p
   {
     category: "Hooks",
     icon: "⎔",
-    desc: "Deterministic lifecycle hooks. Add to .claude/settings.json to automate the edges.",
+    desc: "Deterministic lifecycle hooks. Merge each snippet into the .claude/settings.json in your project root (create the file if it doesn't exist — it must stay valid JSON, no comments).",
+    docs: { label: "Docs: Hooks", url: "https://docs.claude.com/en/docs/claude-code/hooks-guide" },
     items: [
       {
         id: "hook-format",
@@ -1058,8 +1050,8 @@ Review changed files against the organization's standard patterns (the "golden p
         label: "Format code after every write/edit",
         tags: ["quality", "automatic"],
         filename: ".claude/settings.json (hooks section)",
-        content: `// Add to your .claude/settings.json
-{
+        note: "Claude writes well-formatted code ~90% of the time; this catches the rest so you never fail CI on formatting. Hooks receive the tool call as JSON on stdin — this uses jq to pull out the file path, so jq must be installed. Swap prettier for your project's formatter.",
+        content: `{
   "hooks": {
     "PostToolUse": [
       {
@@ -1067,16 +1059,13 @@ Review changed files against the organization's standard patterns (the "golden p
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \\"$CLAUDE_FILE_PATH\\" 2>/dev/null || true"
+            "command": "jq -r '.tool_input.file_path // empty' | xargs -I{} npx prettier --write {} 2>/dev/null || true"
           }
         ]
       }
     ]
   }
-}
-
-// Why: Claude writes well-formatted code ~90% of the time.
-// This hook catches the other 10% so you never fail CI on formatting.`,
+}`,
       },
       {
         id: "hook-stop",
@@ -1084,8 +1073,8 @@ Review changed files against the organization's standard patterns (the "golden p
         label: "Notify when a session finishes",
         tags: ["parallel", "automation"],
         filename: ".claude/settings.json (hooks section)",
-        content: `// Add to your .claude/settings.json
-{
+        note: "When running 3–5 parallel sessions in auto mode, you need to know when one finishes without watching every tab. The command below is macOS; on Linux, replace osascript with notify-send.",
+        content: `{
   "hooks": {
     "Stop": [
       {
@@ -1099,38 +1088,30 @@ Review changed files against the organization's standard patterns (the "golden p
       }
     ]
   }
-}
-
-// Why: When running 3-5 parallel sessions in auto mode,
-// you need to know when one finishes without watching every tab.
-// On Linux, replace osascript with notify-send.`,
+}`,
       },
       {
-        id: "hook-postcompact",
-        name: "PostCompact: re-inject context",
+        id: "hook-compact",
+        name: "SessionStart(compact): re-inject context",
         label: "Re-inject rules after context compression",
         tags: ["context", "safety"],
         filename: ".claude/settings.json (hooks section)",
-        content: `// Add to your .claude/settings.json
-{
+        note: "When auto-compact fires mid-task, critical rules from CLAUDE.md can get summarized away. SessionStart with the \"compact\" matcher runs right after compaction, and anything the command prints is added back into Claude's context.",
+        content: `{
   "hooks": {
-    "PostCompact": [
+    "SessionStart": [
       {
-        "matcher": "",
+        "matcher": "compact",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '⚠️ Context was compacted. Re-read CLAUDE.md before your next action. Pay special attention to the Never-Do rules.'"
+            "command": "echo 'Context was compacted. Re-read CLAUDE.md before your next action. Pay special attention to the Never-Do rules.'"
           }
         ]
       }
     ]
   }
-}
-
-// Why: When auto-compact fires mid-task, critical rules
-// from CLAUDE.md can get summarized away. This hook nudges
-// Claude to re-read the rules before continuing.`,
+}`,
       },
     ],
   },
@@ -1241,5 +1222,89 @@ Walk me through each concept. After explaining, have me restate my understanding
 Then quiz me with multiple-choice questions (shuffled answers, no peeking at the explanation until I answer).
 
 This session should not end until you've verified that I've demonstrated understanding of everything on your checklist.`,
+  },
+];
+
+// ─── Anthropic learning resources ───────────────────────────────────────────
+// Official lessons and references, mapped to the ladder. Shown at the bottom
+// of the Ladder view so every phase has an authoritative "go deeper" path.
+
+export interface Resource {
+  title: string;
+  desc: string;
+  url: string;
+}
+
+export interface ResourceGroup {
+  /** Phase id this group pairs with, or "start" for the pre-Crawl on-ramp. */
+  id: string;
+  label: string;
+  items: Resource[];
+}
+
+export const ANTHROPIC_RESOURCES: ResourceGroup[] = [
+  {
+    id: "start",
+    label: "Before you crawl — never used Claude Code?",
+    items: [
+      {
+        title: "Claude Code quickstart",
+        desc: "Install Claude Code and run your first session in about ten minutes. Start here if any rep in this app feels unfamiliar.",
+        url: "https://docs.claude.com/en/docs/claude-code/quickstart",
+      },
+      {
+        title: "Claude Code overview",
+        desc: "What Claude Code is, what it can do, and how it fits into a terminal-first workflow.",
+        url: "https://docs.claude.com/en/docs/claude-code/overview",
+      },
+    ],
+  },
+  {
+    id: "crawl",
+    label: "Crawl — learn the fundamentals",
+    items: [
+      {
+        title: "Claude Code: Best practices for agentic coding",
+        desc: "Anthropic's engineering-blog post on CLAUDE.md, verification, and workflow habits — the source material behind most of this curriculum.",
+        url: "https://www.anthropic.com/engineering/claude-code-best-practices",
+      },
+      {
+        title: "Anthropic Academy",
+        desc: "Free self-paced courses from Anthropic, including a dedicated Claude Code course with videos and exercises.",
+        url: "https://www.anthropic.com/learn",
+      },
+    ],
+  },
+  {
+    id: "walk",
+    label: "Walk — sharpen prompts and build infrastructure",
+    items: [
+      {
+        title: "Anthropic's interactive prompt engineering tutorial",
+        desc: "A hands-on course from the anthropics/courses repo — feeds directly into everything in the Prompt Lab tab.",
+        url: "https://github.com/anthropics/courses",
+      },
+      {
+        title: "Prompt engineering guide",
+        desc: "The official reference for structuring prompts: being clear and direct, examples, chain-of-thought, and more.",
+        url: "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview",
+      },
+    ],
+  },
+  {
+    id: "run",
+    label: "Run — patterns for agents at scale",
+    items: [
+      {
+        title: "Claude Cookbook",
+        desc: "Runnable recipes for agent patterns — tool use, orchestration, and the fan-out workflows the Run phase is built on.",
+        url: "https://github.com/anthropics/claude-cookbooks",
+      },
+      {
+        title: "Building effective agents",
+        desc: "Anthropic's guide to agent architectures: when to use workflows vs. agents, and the patterns that actually work in production.",
+        url: "https://www.anthropic.com/engineering/building-effective-agents",
+      },
+    ],
   },
 ];

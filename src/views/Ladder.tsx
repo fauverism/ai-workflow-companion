@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ALUMNI_CERT, CERTS, PHASES, type Milestone } from "../data";
+import { ALUMNI_CERT, ANTHROPIC_RESOURCES, CERTS, PHASES, type Milestone } from "../data";
 import type { Store } from "../store";
 import { ProgressRing } from "../components/shared";
 
@@ -171,6 +171,29 @@ export function Ladder({ store, onClaim }: { store: Store; onClaim: (phaseId: st
           ◆ All phases complete — claim your {ALUMNI_CERT.title} certificate →
         </button>
       )}
+
+      <div className="section-label">go deeper — official lessons from Anthropic</div>
+      <p style={{ fontSize: 15.5, color: "var(--ink-2)", margin: "0 0 16px", maxWidth: "62ch" }}>
+        This app builds the habit; these teach the material. Each group pairs with a phase of
+        the ladder — if a milestone feels over your head, its phase's resources are the place
+        to start.
+      </p>
+      {ANTHROPIC_RESOURCES.map((group) => (
+        <div key={group.id} style={{ marginBottom: 18 }}>
+          <div className="resource-group-label">{group.label}</div>
+          <div className="resource-list">
+            {group.items.map((r) => (
+              <a key={r.url} className="resource-row" href={r.url} target="_blank" rel="noreferrer">
+                <span>
+                  <span className="resource-title">{r.title}</span>
+                  <span className="resource-desc">{r.desc}</span>
+                </span>
+                <span className="resource-arrow" aria-hidden>↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

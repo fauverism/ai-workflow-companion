@@ -726,6 +726,74 @@ a:hover { text-decoration-color: var(--accent); }
   white-space: nowrap;
 }
 
+/* ── Resources (Anthropic lessons) ── */
+
+.resource-group-label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+
+.resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resource-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.resource-row:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: var(--bg);
+}
+
+.resource-title {
+  display: block;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.resource-row:hover .resource-title { color: var(--accent); }
+
+.resource-desc {
+  display: block;
+  font-size: 14.5px;
+  color: var(--ink-2);
+  margin-top: 3px;
+  line-height: 1.55;
+  max-width: 68ch;
+}
+
+.resource-arrow {
+  color: var(--ink-3);
+  font-size: 15px;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.resource-row:hover .resource-arrow {
+  color: var(--accent);
+  transform: translate(2px, -2px);
+}
+
 /* ── Toolkit ── */
 
 .filter-row {
@@ -815,6 +883,16 @@ a:hover { text-decoration-color: var(--accent); }
 .tool-card.open .tool-caret { transform: rotate(180deg); }
 
 .tool-body { border-top: 1px solid var(--border); }
+
+.tool-note {
+  margin: 0;
+  padding: 12px 18px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--border);
+}
 
 .tool-file-bar {
   background: var(--surface-2);

@@ -73,7 +73,12 @@ export function Toolkit() {
           <div className="section-label">
             <span style={{ color: "var(--accent)" }}>{cat.icon}</span> {cat.category}
           </div>
-          <p style={{ fontSize: 12.5, color: "var(--ink-3)", margin: "-4px 0 12px" }}>{cat.desc}</p>
+          <p style={{ fontSize: 14.5, color: "var(--ink-2)", margin: "-4px 0 6px" }}>{cat.desc}</p>
+          <p style={{ margin: "0 0 12px" }}>
+            <a className="guide-docs" href={cat.docs.url} target="_blank" rel="noreferrer">
+              {cat.docs.label} ↗
+            </a>
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {cat.items.map((item) => {
               const isOpen = expanded === item.id;
@@ -95,6 +100,7 @@ export function Toolkit() {
                   </button>
                   {isOpen && (
                     <div className="tool-body">
+                      {item.note && <p className="tool-note">{item.note}</p>}
                       <div className="tool-file-bar">
                         <code>{item.filename}</code>
                         <CopyButton text={item.content} />
